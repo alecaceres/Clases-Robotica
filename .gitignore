@@ -1,3 +1,5 @@
 .vscode/
 server.py
 bash.sh
+__pycache__/
+*.egg-info
