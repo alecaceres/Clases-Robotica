@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import json
 
-path = "./src/tareas/Rotation/acaceres@fiuna.edu.py/src/params.json"
 
 def get_params(path):
     with open(path) as params_json:
@@ -21,11 +20,11 @@ def filter_image(path):
     params = get_params(path)
     imageRGB = get_image(params["imagePath"])
 
-    filter_params = params.filterParams
+    filter_params = params["filterParams"]
     imageRGB[:filter_params["minHeight"]+1,:,:]=255
     imageRGB[filter_params["maxHeight"]:,:,:]=255
 
-    minRAB=np.array([filter_params["minB"], filter_params["minG"], filter_params["minR"]])
-    maxRAB=np.array([filter_params["maxB"], filter_params["maxG"], filter_params["maxR"]])
-    mask=255-cv2.inRange(imageRGB,minRAB,maxRAB)
+    minRGB=np.array([filter_params["minB"], filter_params["minG"], filter_params["minR"]])
+    maxRGB=np.array([filter_params["maxB"], filter_params["maxG"], filter_params["maxR"]])
+    mask=255-cv2.inRange(imageRGB,minRGB,maxRGB)
     return mask
