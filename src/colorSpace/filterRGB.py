@@ -66,7 +66,6 @@ while True:
     #waitkey devuelve el asci de la tecla oprimida
     key=cv2.waitKey(1)
     if(key==ord("q")):
-        print(255-mask)
         break
 
 cv2.destroyAllWindows()

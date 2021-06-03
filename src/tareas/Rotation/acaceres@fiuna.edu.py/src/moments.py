@@ -14,10 +14,6 @@ def get_object_info(image):
     areaObject=moments['m00']
     areaImage=binaryImage.shape[0]*binaryImage.shape[1]
 
-    print(areaObject)
-    print(areaImage)
-    print(binaryImage)
-
     area=areaObject/areaImage*100
     xcenter=(moments['m10']/moments['m00'])/binaryImage.shape[1]*100
     ycenter=(moments['m01']/moments['m00'])/binaryImage.shape[0]*100
