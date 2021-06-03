@@ -1,9 +1,14 @@
 import cv2
+
+import sys
+SOURCE_PATH = "./src/tareas/Rotation/acaceres@fiuna.edu.py/src/" # para poder importar
+sys.path.append(SOURCE_PATH) 
+
 import filter
 import moments
 import pca
 
-path = "./src/tareas/Rotation/acaceres@fiuna.edu.py/src/params.json"
+path = f"{SOURCE_PATH}params.json"
 
 image = filter.filter_image(path)
 height, width= image.shape
