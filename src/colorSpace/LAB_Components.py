@@ -1,25 +1,24 @@
 import cv2
 import numpy as np
 
-image=cv2.imread("./test.jpg")
+image=cv2.imread("../tareas/Rotation/acaceres@fiuna.edu.py/imgs/birds.jpg")
 
 #resuze de la imagen 
 
-image=cv2.resize(image,(700,700))
+image=cv2.resize(image,(600,600))
 
 #convertimos a LAB
 imageLAB=cv2.cvtColor(image,cv2.COLOR_BGR2LAB)
 
-imageH=imageLAB[:,:,0]
+imageL=imageLAB[:,:,0]
 
-imageS=imageLAB[:,:,1]
+imageA=imageLAB[:,:,1]
 
-imageV=imageLAB[:,:,2]
+imageB=imageLAB[:,:,2]
 
-cv2.imshow("L",imageH)
-cv2.imshow("A",imageS)
-cv2.imshow("B",imageV)
+cv2.imshow("L",imageL)
+cv2.imshow("A",imageA)
+cv2.imshow("B",imageB)
 
 
-cv2.waitKey(0);
-
+cv2.waitKey(0)

@@ -1,0 +1,13 @@
+{
+    "filterParams": {
+        "minHeight": 51,
+        "maxHeight": 135,
+        "minR": 82,
+        "maxR": 255,
+        "minG": 111,
+        "maxG": 255,
+        "minB": 141,
+        "maxB": 255
+    },
+    "imagePath": "./src/tareas/Rotation/acaceres@fiuna.edu.py/imgs/birds.jpg"
+}

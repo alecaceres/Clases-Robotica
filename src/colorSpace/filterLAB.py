@@ -7,12 +7,12 @@ cv2.namedWindow("filtered")
 def callback(x):
     pass
 
-cv2.createTrackbar("minH","original",0,179,callback)
-cv2.createTrackbar("maxH","original",179,179,callback)
-cv2.createTrackbar("minS","original",0,255,callback)
-cv2.createTrackbar("maxS","original",255,255,callback)
-cv2.createTrackbar("minV","original",0,255,callback)
-cv2.createTrackbar("maxV","original",255,255,callback)
+cv2.createTrackbar("minL","original",0,255,callback)
+cv2.createTrackbar("maxL","original",255,255,callback)
+cv2.createTrackbar("minA","original",0,255,callback)
+cv2.createTrackbar("maxA","original",255,255,callback)
+cv2.createTrackbar("minB","original",0,255,callback)
+cv2.createTrackbar("maxB","original",255,255,callback)
 
 #video capture args 
 #Si es un numerico 0,1,2
@@ -32,23 +32,23 @@ while True:
     cv2.imshow("original",frame)
 
     #obtener imagen en HSV
-    imageHSV=cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
+    imageLAB=cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
 
     #getTrackbarpos obtiene el valor actual del slider 
-    minH=cv2.getTrackbarPos("minH","original")
-    maxH=cv2.getTrackbarPos("maxH","original")
-    minS=cv2.getTrackbarPos("minS","original")
-    maxS=cv2.getTrackbarPos("maxS","original")
-    minV=cv2.getTrackbarPos("minV","original")
-    maxV=cv2.getTrackbarPos("maxV","original")
+    minL=cv2.getTrackbarPos("minL","original")
+    maxL=cv2.getTrackbarPos("maxL","original")
+    minA=cv2.getTrackbarPos("minA","original")
+    maxA=cv2.getTrackbarPos("maxA","original")
+    minB=cv2.getTrackbarPos("minB","original")
+    maxB=cv2.getTrackbarPos("maxB","original")
 
     #Definicion del rango
     #120,20,20 minH=140 maxH=200
-    minHSV=np.array([minH,minS,minV])
-    maxHSV=np.array([maxH,maxS,maxV])
+    minLAB=np.array([minL, minA, minB])
+    maxLAB=np.array([maxL, maxA, maxB])
 
     #inrange convierte a 255 todos los pixeles en el rango de minHSV y maxHSV, y el resto los deja en 0
-    mask=cv2.inRange(imageHSV,minHSV,maxHSV)
+    mask=cv2.inRange(imageLAB,minLAB,maxLAB)
     cv2.imshow("filtered",mask)
     cv2.imshow("original",frame)
 
