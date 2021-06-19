@@ -5,3 +5,4 @@ eventlet
 requests
 flask-socketio
 pyzbar
+PySimpleGUI
