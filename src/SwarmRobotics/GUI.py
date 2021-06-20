@@ -7,20 +7,23 @@ import scipy.io as sio # para la lectura del .mat
 
 AppFont = 'Any 16'
 sg.theme('DarkGrey5')
-_VARS = {'cellCount': 30, 'gridSize': 600, 'canvas': False, 'window': False,
-         'playerPos': [0, 0], 'cellMAP': False}
+_VARS = {'cellCount': 32, 'gridSize': 608, 'canvas': False, 'window': False,
+         'playerPos': [1, 1], 'targetA': [23,9], 'targetB': [28,1], 'cellMAP': False}
 cellSize = _VARS['gridSize']/_VARS['cellCount']
-exitPos = [_VARS['cellCount']-1, _VARS['cellCount']-1]
+exitPos = [_VARS['cellCount']-1, _VARS['cellCount']-1]  
 
 
 
 def makeMaze():
-    mat_contents = sio.loadmat('./src/SwarmRobotics/mat/obstaculos.mat')
-    # Se inicializa la matriz en ceros:
-    return mat_contents['obstaculos']
+    mat_contents = sio.loadmat('./src/SwarmRobotics/mat/pista.mat')
+    obstaculos = np.zeros((32,32)) # la matriz de obstáculos se extiende a 32x32
+    obstaculos[1:31,1:31] = mat_contents['obstaculos'] # datos de entrada
+    paredes = np.ones((32,32))
+    paredes[1:31,1:31] = mat_contents['paredes']
+    return obstaculos, paredes
 
 
-_VARS['cellMAP'] = makeMaze()
+_VARS['cellMAP'], _VARS['wallMAP'] = makeMaze() # cellMAP = obstáculos, wallMAP = paredes
 
 
 # METHODS:
@@ -48,8 +51,10 @@ def drawCell(x, y, color='GREY'):
 def placeCells():
     for row in range(_VARS['cellMAP'].shape[0]):
         for column in range(_VARS['cellMAP'].shape[1]):
-            if(_VARS['cellMAP'][column][row] == 1):
-                drawCell((cellSize*row), (cellSize*column))
+            if(_VARS['wallMAP'][column][row] == 1): # 1 si está pintado, 0 si no
+                drawCell((cellSize*row), (cellSize*column), 'BLACK')
+            elif(_VARS['cellMAP'][column][row] == 1): # si la pared no está pintada, se verifica el obstáculo
+                drawCell((cellSize*row), (cellSize*column)) # se pinta de gris por defecto
 
 
 def checkEvents(event):
@@ -76,19 +81,21 @@ def checkEvents(event):
     return move
 
 
-# INIT :
+# Inicio  :
 layout = [[sg.Canvas(size=(_VARS['gridSize'], _VARS['gridSize']),
                      background_color='white',
                      key='canvas')],
           [sg.Exit(font=AppFont),
-           sg.Button('NewMaze', font=AppFont)]]
+           sg.Text('', key='-exit-', font=AppFont, size=(15, 1)),
+           sg.Button('NewMaze', font=AppFont)]] # se dibuja el layout de la GUI
 
 _VARS['window'] = sg.Window('Random Puzzle Generator', layout, resizable=True, finalize=True,
                             return_keyboard_events=True)
 _VARS['canvas'] = _VARS['window']['canvas']
-drawGrid()
-drawCell(_VARS['playerPos'][0], _VARS['playerPos'][1], 'TOMATO')
-drawCell(exitPos[0]*cellSize, exitPos[1]*cellSize, 'Black')
+drawGrid() # se dibuja la malla 32x32
+drawCell(_VARS['playerPos'][0], _VARS['playerPos'][1], 'TOMATO') # posición inicial del robot A
+# drawCell(exitPos[0]*cellSize, exitPos[1]*cellSize, 'Black') # no hay celda de salida
+drawCell(10*cellSize, 18*cellSize, '#290907')
 placeCells()
 
 
