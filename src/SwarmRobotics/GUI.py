@@ -42,19 +42,52 @@ def drawGrid():
             fill='BLACK', width=1)
 
 
-def drawCell(x, y, color='GREY'):
+def drawCell(x, y, color='GREY', text = ""):
+    x *= cellSize
+    y *= cellSize
     _VARS['canvas'].TKCanvas.create_rectangle(
         x, y, x + cellSize, y + cellSize,
         outline='BLACK', fill=color, width=1)
+    if text: drawTextInCell(x, y, text)
+
+
+def drawTextInCell(x, y, text, color="BLACK"):
+    _VARS['canvas'].TKCanvas.create_text(x+cellSize/2,
+                        y+cellSize/2, text=text, fill=color)
+
+def drawRobot(x, y, direction):
+    '''
+    Dibuja el robot en el mapa
+
+    x,y:        posición del vértice superior derecho del robot
+    direction:  uno de los siguientes: UP, DOWN, LEFT, RIGHT
+'''
+    # Por defecto, se considera direction = UP
+    FL = [x-1,y] # front left
+    FR = [x, y] # front right
+    RL = [x-1, y+1] # rear left
+    RR = [x, y+1] # rear right
+    if direction == "DOWN": # rotación de 180° con respecto a la orientación hacia arriba
+        FL, FR, RL, RR = RR, RL, FR, FL
+    elif direction == "LEFT": # rotación de -90° con respecto a la orientación hacia arriba
+        FL, FR, RL, RR = FR, RR, FL, RL
+    elif direction == "RIGHT": # rotación de 90° con respecto a la orientación hacia arriba
+        FL, FR, RL, RR = RL, FL, RR, FR
+    drawCell(*FL, color="#f6b26b", text = "FL")
+    drawCell(*FR, color="#f6b26b", text = "FR")
+    drawCell(*RL, color="#b6d7a8", text = "RL")
+    drawCell(*RR, color="#b6d7a8", text = "RR")
+    
+
 
 
 def placeCells():
     for row in range(_VARS['cellMAP'].shape[0]):
         for column in range(_VARS['cellMAP'].shape[1]):
             if(_VARS['wallMAP'][column][row] == 1): # 1 si está pintado, 0 si no
-                drawCell((cellSize*row), (cellSize*column), 'BLACK')
+                drawCell(row, column, 'BLACK')
             elif(_VARS['cellMAP'][column][row] == 1): # si la pared no está pintada, se verifica el obstáculo
-                drawCell((cellSize*row), (cellSize*column)) # se pinta de gris por defecto
+                drawCell(row, column) # se pinta de gris por defecto
 
 
 def checkEvents(event):
@@ -94,8 +127,9 @@ _VARS['window'] = sg.Window('Random Puzzle Generator', layout, resizable=True, f
 _VARS['canvas'] = _VARS['window']['canvas']
 drawGrid() # se dibuja la malla 32x32
 drawCell(_VARS['playerPos'][0], _VARS['playerPos'][1], 'TOMATO') # posición inicial del robot A
-# drawCell(exitPos[0]*cellSize, exitPos[1]*cellSize, 'Black') # no hay celda de salida
-drawCell(10*cellSize, 18*cellSize, '#290907')
+# drawCell(exitPos[0], exitPos[1], 'Black') # no hay celda de salida
+drawRobot(4, 26, "UP")
+drawCell(10, 18, '#290907')
 placeCells()
 
 
@@ -132,7 +166,7 @@ while True:             # Event Loop
     # Clear canvas, draw grid and cells
     _VARS['canvas'].TKCanvas.delete("all")
     drawGrid()
-    drawCell(exitPos[0]*cellSize, exitPos[1]*cellSize, 'Black')
+    drawCell(exitPos[0], exitPos[1], 'Black')
     drawCell(_VARS['playerPos'][0], _VARS['playerPos'][1], 'TOMATO')
     placeCells()
 
