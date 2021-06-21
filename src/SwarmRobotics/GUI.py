@@ -9,7 +9,7 @@ AppFont = 'Any 16'
 sg.theme('DarkGrey5')
 _VARS = {'cellCount': 32, 'gridSize': 608, 'canvas': False, 'window': False,
          'playerPos': [1, 1], 'targetA': [10,24], 'targetB': [29,2], 'cellMAP': False,
-         'player1Pos': [[4, 27], [5, 27], [4, 28], [5, 28]]}
+         'player1Pos': [[4, 27], [5, 27], [4, 28], [5, 28]]} # FL, FR, RL, RR
 cellSize = _VARS['gridSize']/_VARS['cellCount']
 exitPos = [_VARS['cellCount']-1, _VARS['cellCount']-1]  
 possibleMoves = [
@@ -32,31 +32,27 @@ def makeMaze():
     paredes[1:31,1:31] = mat_contents['paredes']
     return obstaculos, paredes
 
-
-_VARS['cellMAP'], _VARS['wallMAP'] = makeMaze() # cellMAP = obstáculos, wallMAP = paredes
-for i in range(1,8):
-    print(f"Positioning robot {i}...")
-    x,y = [random.choice(range(1,31)), random.choice(range(1,31))] # coordenadas de FR
+def getOccupiedCells():
     full = _VARS['cellMAP'].T + _VARS['wallMAP'].T
     robots = [pos for key in _VARS if key.endswith("Pos") for pos in _VARS[key] if isinstance(pos,list)]
     for xpos,ypos in robots: full[xpos,ypos] = 1
+    return full
+
+
+_VARS['cellMAP'], _VARS['wallMAP'] = makeMaze() # cellMAP = obstáculos, wallMAP = paredes
+for i in range(1,8):
+    x,y = [random.choice(range(1,31)), random.choice(range(1,31))] # coordenadas de FR
+    full=getOccupiedCells()
     while True:
-        print(f"\tTrying with ({x},{y})...")
         is_empty = not (full[x,y])
-        print(f"\t\tIs empty? {is_empty}")
         if is_empty:
             direction = []
-            for a in [[x-1,y-1], [x,y-1], [x+1,y-1], [x-1,y],[x,y],[x+1,y],[x-1,y+1],[x,y+1],[x+1,y+1]]:
-                print("\t\t\t",a, full[a[0], a[1]])
-
             if not (full[x-1,y] or full[x,y+1] or full[x-1,y+1]): direction.append("UP")
             if not (full[x+1,y] or full[x,y-1] or full[x+1,y-1]): direction.append("DOWN")
             if not (full[x+1,y] or full[x,y+1] or full[x+1,y+1]): direction.append("LEFT")
             if not (full[x-1,y] or full[x,y-1] or full[x-1,y-1]): direction.append("RIGHT")
-            print(f"\t\tDirections: {direction}")
             if direction:
                 chosenDirection = random.choice(direction)
-                print(f"\t\tThe chosen direction is {chosenDirection}")
                 if chosenDirection == "UP":
                     _VARS[f'robot{i}Pos'] = [[x-1,y], [x,y], [x-1,y+1], [x,y+1]]
                     break
@@ -187,6 +183,93 @@ def checkEvents(event):
             move = 'Right'
     return move
 
+def getDirection(FL, FR, RL, RR = None):
+    if FL[0]==RL[0] and FR[0]==RR[0] and FL[1]<RL[1]: return "UP"
+    if FL[0]==RL[0] and FR[0]==RR[0] and FL[1]>RL[1]: return "DOWN"
+    if FL[1]==RL[1] and FR[1]==RR[1] and FL[0]>RL[0]: return "RIGHT"
+    if FL[1]==RL[1] and FR[1]==RR[1] and FL[0]<RL[0]: return "LEFT"
+    return None
+
+def scan(FL, FR, direction, robotNum=1):
+    '''
+    Devuelve una lista de distancias conocidas a los siguientes obstáculos,
+    proveídas por el sensor ultrasonido
+    '''
+    full = getOccupiedCells()
+    for x,y in _VARS[f'player{robotNum}Pos']: full[x,y]=0
+    dist_next_obst = [float("inf")]*4 # 4 valores, de izquierda a derecha del frente del robot (es una distancia)
+    [FLx, FLy], [FRx, FRy] = FL, FR
+    if direction == "UP":
+        for j,x in enumerate([FLx-1, FLx, FRx, FRx+1]):
+            for i in range(1,4):
+                print(i)
+                y = FLy if j<=2 else FRy
+                print(f"({x},{y-i}): {full[x,y-i]}")
+                if full[x,y-i]: dist_next_obst[j] = i; break
+    if direction == "DOWN":
+        for j,x in enumerate([FLx+1, FLx, FRx, FRx-1]):
+            for i in range(1,4):
+                y = FLy if j<=2 else FRy
+                if full[x,y+i]: dist_next_obst[j] = i; break
+    if direction == "LEFT":
+        for j,y in enumerate([FLy+1, FLy, FRy, FRy-1]):
+            for i in range(1,4):
+                x = FLx if j<=2 else FRx
+                if full[x+i,y]: dist_next_obst[j] = i; break
+    if direction == "RIGHT":
+        for j,y in enumerate([FLy+1, FLy, FRy, FRy-1]):
+            for i in range(1,4):
+                x = FLx if j<=2 else FRx
+                if full[x-i,y]: dist_next_obst[j] = i; break
+    return dist_next_obst
+
+def rotateRobot(angle, direction, robotNum = 1):
+    FL, FR, RL, RR = _VARS[f'player{robotNum}Pos']
+    if angle == 90: FL, FR, RL, RR = RL, FL, RR, FR
+    elif angle == -90: FL, FR, RL, RR = FR, RR, FL, RL
+    elif angle == 45:
+        if direction == "UP": FR, RR = [FR[0],FR[1]-1], [RR[0],RR[1]-1]
+        elif direction == "DOWN": FR, RR = [FR[0],FR[1]+1], [RR[0],RR[1]+1]
+        elif direction == "LEFT": FR, RR = [FR[0]-1,FR[1]], [RR[0]-1,RR[1]]
+        elif direction == "RIGHT": FR, RR = [FR[0]+1,FR[1]], [RR[0]+1,RR[1]]
+    elif angle == -45:
+        if direction == "DOWN": FR, RR = [FR[0],FR[1]-1], [RR[0],RR[1]-1]
+        elif direction == "UP": FR, RR = [FR[0],FR[1]+1], [RR[0],RR[1]+1]
+        elif direction == "RIGHT": FR, RR = [FR[0]-1,FR[1]], [RR[0]-1,RR[1]]
+        elif direction == "LEFT(": FR, RR = [FR[0]+1,FR[1]], [RR[0]+1,RR[1]]
+    _VARS[f'player{robotNum}Pos'] = [FL, FR, RL, RR]
+    return
+
+def moveRobot(robotNum = 1):
+    '''
+    Esta función permite al robot desplazarse a una siguiente posición
+    '''
+    xdest, ydest = _VARS['targetB']
+    FL, FR, RL, RR = _VARS[f'player{robotNum}Pos']
+    direction = getDirection(FL, FR, RL, RR)
+    dist_next_obst = scan(FL, FR, direction)
+    print(dist_next_obst)
+    dist_act = abs(xdest-FR[0])+abs(ydest-FR[1]) # aproximación con distancia Manhattan actual
+    if dist_next_obst[1] == 1 or dist_next_obst == 1: # si el frente está cubierto
+        if FL[0]==FR[0] or FL[1]==FR[1]: # rotar 90°. Si no: retroceder
+            if dist_next_obst[0] > dist_next_obst[3]: rotateRobot(90, direction=direction); return
+            rotateRobot(-90, direction=direction); return
+        if direction == "UP":
+            if FL[1]>FR[1]: rotateRobot(-45, direction=direction); return
+            rotateRobot(45, direction=direction); return
+        if direction == "DOWN":
+            if FL[1]>FR[1]: rotateRobot(45, direction=direction); return
+            rotateRobot(-45, direction=direction); return
+        if direction == "LEFT":
+            if FL[0]>FR[0]: rotateRobot(-45, direction=direction); return
+            rotateRobot(45, direction=direction); return
+        if direction == "RIGHT":
+            if FL[0]>FR[0]: rotateRobot(45, direction=direction); return
+            rotateRobot(-45, direction=direction); return
+    if FL[0]==FR[0] or FL[1]==FR[1]:
+        rotateRobot(45, direction=direction); return
+    
+    rotateRobot(-45, direction=direction)    
 
 # Inicio  :
 layout = [[sg.Canvas(size=(_VARS['gridSize'], _VARS['gridSize']),
@@ -222,27 +305,16 @@ while True:             # Se actúa en un bucle según el evento registrado
     yPos = int(math.ceil(_VARS['playerPos'][1]))    
 
     if checkEvents(event) == 'Up':
-        if int(_VARS['playerPos'][1]) >= 0:
-            if _VARS['cellMAP'][yPos-1][xPos] != 1:
-                _VARS['playerPos'][1] = _VARS['playerPos'][1]
-    elif checkEvents(event) == 'Down':
-        if int(_VARS['playerPos'][1]) < _VARS['gridSize']-1:
-            if _VARS['cellMAP'][yPos+1][xPos] != 1:
-                _VARS['playerPos'][1] = _VARS['playerPos'][1]
-    elif checkEvents(event) == 'Left':
-        if int(_VARS['playerPos'][0]) >= 0:
-            if _VARS['cellMAP'][yPos][xPos-1] != 1:
-                _VARS['playerPos'][0] = _VARS['playerPos'][0]
-    elif checkEvents(event) == 'Right':
-        if int(_VARS['playerPos'][0]) < _VARS['gridSize']-1:
-            if _VARS['cellMAP'][yPos][xPos+1] != 1:
-                _VARS['playerPos'][0] = _VARS['playerPos'][0]
+        moveRobot()
 
     # Limpiar canvas, dibujar malla y celdas
     _VARS['canvas'].TKCanvas.delete("all")
     drawGrid()
-    drawCell(_VARS['playerPos'][0], _VARS['playerPos'][1], 'TOMATO')
     placeCells()
+    drawTargets()
+    drawDummyRobots()
+    placeCells()
+    drawRobot(1)
 
     # Check for Exit:
     xPos, yPos = _VARS['playerPos']
